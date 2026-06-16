@@ -385,4 +385,4 @@ These can be added in future versions.
 
 ## License
 
-ISC
+MIT
