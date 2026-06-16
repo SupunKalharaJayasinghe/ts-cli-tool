@@ -1,6 +1,7 @@
 import type { Command } from 'commander';
 import { generateBasicProject } from '../generators/generateBasicProject.js';
 import { askBasicScaffoldOptions } from '../prompts/askBasicScaffoldOptions.js';
+import { pathExists } from '../utils/pathExists.js';
 
 export function registerCreateCommand(program: Command): void {
   program
@@ -11,6 +12,14 @@ export function registerCreateCommand(program: Command): void {
 
       try {
         const options = await askBasicScaffoldOptions();
+
+        if (await pathExists(options.targetPath)) {
+          console.error(
+            `\n❌ A folder named "${options.projectName}" already exists. Please choose a different name.`
+          );
+
+          process.exit(1);
+        }
 
         console.log(`\nScaffolding project in ${options.targetPath}...`);
 
