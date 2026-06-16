@@ -2,11 +2,14 @@
   "name": "ts-cli-tool",
   "version": "1.0.0",
   "description": "> A powerful, strongly-typed command-line interface.",
-  "main": "index.js",
+  "main": "dist/index.js",
   "bin": {
-    "my-cli": "./src/index.ts"
+    "my-cli": "./dist/index.js"
   },
   "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -22,11 +25,12 @@
   },
   "homepage": "https://github.com/SupunKalharaJayasinghe/ts-cli-tool#readme",
   "dependencies": {
-    "commander": "^15.0.0"
+    "@inquirer/prompts": "^5.0.7",
+    "commander": "^12.1.0"
   },
   "devDependencies": {
-    "@types/node": "^25.9.3",
-    "ts-node": "^10.9.2",
-    "typescript": "^6.0.3"
+    "@types/node": "^20.14.9",
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.2"
   }
 }
