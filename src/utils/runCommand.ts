@@ -6,11 +6,22 @@ export async function runCommand(
   cwd: string
 ): Promise<void> {
   await new Promise<void>((resolve, reject) => {
-    const child = spawn(command, args, {
-      cwd,
-      stdio: 'inherit',
-      shell: false,
-    });
+    const child =
+      process.platform === 'win32'
+        ? spawn(
+            'cmd.exe',
+            ['/d', '/s', '/c', buildWindowsCommand(command, args)],
+            {
+              cwd,
+              stdio: 'inherit',
+              shell: false,
+            }
+          )
+        : spawn(command, args, {
+            cwd,
+            stdio: 'inherit',
+            shell: false,
+          });
 
     child.on('error', reject);
 
@@ -20,9 +31,27 @@ export async function runCommand(
         return;
       }
 
-      reject(
-        new Error(`${command} ${args.join(' ')} failed with code ${code}`)
-      );
+      reject(new Error(`${command} ${args.join(' ')} failed with code ${code}`));
     });
   });
+}
+
+function buildWindowsCommand(command: string, args: string[]): string {
+  return [command, ...args].map(quoteWindowsArg).join(' ');
+}
+
+function quoteWindowsArg(value: string): string {
+  if (value.length === 0) {
+    return '""';
+  }
+
+  if (!/[\s"\\]/u.test(value)) {
+    return value;
+  }
+
+  const escapedValue = value
+    .replace(/\\/gu, '\\\\')
+    .replace(/"/gu, '\\"');
+
+  return `"${escapedValue}"`;
 }

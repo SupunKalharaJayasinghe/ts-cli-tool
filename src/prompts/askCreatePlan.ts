@@ -9,6 +9,7 @@ import type {
   ProjectShape,
   WebsiteShape,
 } from '../types.js';
+import { pathExists } from '../utils/pathExists.js';
 
 export async function askCreatePlan(): Promise<CreatePlan> {
   const projectName = await askProjectName();
@@ -30,9 +31,15 @@ async function askProjectName(): Promise<string> {
   return input({
     message: 'Project name:',
     default: 'my-app',
-    validate: (value) => {
+    validate: async (value) => {
       if (!/^[a-z0-9][a-z0-9-_]*$/i.test(value)) {
         return 'Use letters, numbers, hyphens, or underscores. The name must start with a letter or number.';
+      }
+
+      const targetPath = path.join(process.cwd(), value);
+
+      if (await pathExists(targetPath)) {
+        return `A folder named "${value}" already exists in this location. Please choose a different name.`;
       }
 
       return true;
@@ -135,6 +142,8 @@ async function askWebsitePlan(
     defaultDocker: false,
   });
 
+  const installDependencies = await askInstallDependencies();
+
   return createPlan({
     projectName,
     targetPath,
@@ -143,6 +152,7 @@ async function askWebsitePlan(
     pages,
     sections,
     modules: [...modules, ...sharedModules],
+    installDependencies,
   });
 }
 
@@ -184,6 +194,8 @@ async function askFullstackPlan(
     defaultDocker: true,
   });
 
+  const installDependencies = await askInstallDependencies();
+
   return createPlan({
     projectName,
     targetPath,
@@ -192,6 +204,7 @@ async function askFullstackPlan(
     pages: [],
     sections: [],
     modules: [...modules, ...sharedModules],
+    installDependencies,
   });
 }
 
@@ -233,6 +246,8 @@ async function askAiPlan(
     defaultDocker: false,
   });
 
+  const installDependencies = await askInstallDependencies();
+
   return createPlan({
     projectName,
     targetPath,
@@ -241,6 +256,7 @@ async function askAiPlan(
     pages: [],
     sections: [],
     modules: [...modules, ...sharedModules],
+    installDependencies,
   });
 }
 
@@ -270,6 +286,13 @@ async function askSharedToolingModules(options: {
   return modules;
 }
 
+async function askInstallDependencies(): Promise<boolean> {
+  return confirm({
+    message: 'Install dependencies after generation?',
+    default: true,
+  });
+}
+
 function createPlan(options: {
   projectName: string;
   targetPath: string;
@@ -278,6 +301,7 @@ function createPlan(options: {
   pages: string[];
   sections: string[];
   modules: FeatureModule[];
+  installDependencies: boolean;
 }): CreatePlan {
   return {
     projectName: options.projectName,
@@ -287,7 +311,7 @@ function createPlan(options: {
     pages: options.pages,
     sections: options.sections,
     modules: uniqueModules(options.modules),
-    installDependencies: true,
+    installDependencies: options.installDependencies,
   };
 }
 
