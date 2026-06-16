@@ -5,7 +5,6 @@ import { input, confirm } from '@inquirer/prompts';
 import fs from 'fs/promises';
 import path from 'path';
 
-// Fix #5: Define a strict interface to remove the 'any' type
 interface PackageJson {
   name: string;
   version: string;
@@ -13,6 +12,13 @@ interface PackageJson {
   main: string;
   scripts: Record<string, string>;
   devDependencies: Record<string, string>;
+}
+
+// Fix #2: Typed interface instead of eslintConfig: any
+interface EslintConfig {
+  env: { node: boolean };
+  extends: string[];
+  parser?: string;
 }
 
 const program = new Command();
@@ -39,7 +45,6 @@ program
     const projectName = await input({
       message: 'What is the name of your project?',
       default: 'my-new-app',
-      // Fix #8: Add project name validation
       validate: (value) => {
         if (!/^[a-z0-9-_]+$/i.test(value)) {
           return 'Project name can only contain letters, numbers, hyphens, and underscores.';
@@ -74,7 +79,6 @@ program
       console.log(`\nScaffolding project in ${targetPath}...`);
       await fs.mkdir(targetPath, { recursive: true });
 
-      // Utilizing our new PackageJson interface
       const packageJson: PackageJson = {
         name: projectName,
         version: '1.0.0',
@@ -92,12 +96,12 @@ program
         packageJson.devDependencies['@types/node'] = '^20.0.0';
       }
 
-      // Fix #7: Properly configure ESLint for TypeScript
       if (includeLint) {
         packageJson.devDependencies['eslint'] = '^8.0.0';
         packageJson.scripts['lint'] = 'eslint src/**/*';
 
-        const eslintConfig: any = {
+        // Fix #2: Use EslintConfig interface — no more 'any'
+        const eslintConfig: EslintConfig = {
           env: { node: true },
           extends: ['eslint:recommended'],
         };
@@ -116,20 +120,20 @@ program
         );
       }
 
-      // Fix #6: Correct the Jest preset logic
       if (includeJest) {
         packageJson.devDependencies['jest'] = '^29.0.0';
         packageJson.scripts['test'] = 'jest';
 
-        let jestConfig = `export default { testEnvironment: 'node' };\n`;
+        // Fix #1 (issue #4): Use CommonJS syntax — generated project has no
+        // "type":"module", so ESM export default would throw a SyntaxError
+        let jestConfig = `module.exports = { testEnvironment: 'node' };\n`;
 
         if (useTypeScript) {
           packageJson.devDependencies['ts-jest'] = '^29.0.0';
           packageJson.devDependencies['@types/jest'] = '^29.0.0';
-          jestConfig = `export default { preset: 'ts-jest', testEnvironment: 'node' };\n`;
+          jestConfig = `module.exports = { preset: 'ts-jest', testEnvironment: 'node' };\n`;
         }
 
-        // Write as jest.config.js (using ESM export)
         await fs.writeFile(path.join(targetPath, 'jest.config.js'), jestConfig);
       }
 
