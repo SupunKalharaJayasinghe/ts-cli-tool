@@ -6,10 +6,11 @@ export async function runCommand(
   cwd: string
 ): Promise<void> {
   await new Promise<void>((resolve, reject) => {
-    const child = spawn(command, args, {
+    const fullCommand = [command, ...args].map(quoteArg).join(' ');
+    const child = spawn(fullCommand, {
       cwd,
       stdio: 'inherit',
-      shell: false,
+      shell: true,
     });
 
     child.on('error', reject);
@@ -25,4 +26,12 @@ export async function runCommand(
       );
     });
   });
+}
+
+function quoteArg(value: string): string {
+  if (!/[\s"]/u.test(value)) {
+    return value;
+  }
+
+  return `"${value.replace(/"/gu, '\\"')}"`;
 }
