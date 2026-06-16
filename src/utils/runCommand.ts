@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import path from 'node:path';
 
 export async function runCommand(
   command: string,
@@ -9,7 +10,7 @@ export async function runCommand(
     const child =
       process.platform === 'win32'
         ? spawn(
-            'cmd.exe',
+            getWindowsCommandProcessor(),
             ['/d', '/s', '/c', buildWindowsCommand(command, args)],
             {
               cwd,
@@ -34,6 +35,17 @@ export async function runCommand(
       reject(new Error(`${command} ${args.join(' ')} failed with code ${code}`));
     });
   });
+}
+
+function getWindowsCommandProcessor(): string {
+  return (
+    process.env.ComSpec ??
+    path.join(
+      process.env.SystemRoot ?? process.env.WINDIR ?? 'C:\\Windows',
+      'System32',
+      'cmd.exe'
+    )
+  );
 }
 
 function buildWindowsCommand(command: string, args: string[]): string {
