@@ -2,6 +2,7 @@ import path from 'node:path';
 import type { CreatePlan } from '../types.js';
 import { writeFileSafe } from '../utils/files.js';
 import { toPascal, toTitle } from '../utils/strings.js';
+import { starterBranding } from './starterBranding.js';
 
 export async function applyWebsitePlan(plan: CreatePlan): Promise<void> {
   if (plan.blueprint !== 'website') {
@@ -77,7 +78,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="bg-white text-slate-950 antialiased">{children}</body>
+      <body className="antialiased">{children}</body>
     </html>
   );
 }
@@ -103,7 +104,7 @@ async function writeNavbar(plan: CreatePlan): Promise<void> {
       ? getWebsiteSections(plan)
           .map(
             (section) =>
-              `          <a href="#${section}" className="transition hover:text-slate-950">${toTitle(
+              `          <a href="#${section}" className="text-slate-600 hover:text-slate-900 transition font-medium">${toTitle(
                 section
               )}</a>`
           )
@@ -112,7 +113,7 @@ async function writeNavbar(plan: CreatePlan): Promise<void> {
           .map((page) => {
             const href = page === 'home' ? '/' : `/${page}`;
 
-            return `          <Link href="${href}" className="transition hover:text-slate-950">${toTitle(
+            return `          <Link href="${href}" className="text-slate-600 hover:text-slate-900 transition font-medium">${toTitle(
               page
             )}</Link>`;
           })
@@ -121,20 +122,44 @@ async function writeNavbar(plan: CreatePlan): Promise<void> {
   const importLink =
     plan.shape === 'multi-page' ? `import Link from 'next/link';\n` : '';
 
+  const contactHref = plan.shape === 'one-page' ? '#contact' : '/contact';
+  const ctaElement = plan.shape === 'one-page'
+    ? `<a
+            href="${contactHref}"
+            className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-500 transition duration-200"
+          >
+            Start Editing
+            <ArrowRight className="h-3.5 w-3.5" />
+          </a>`
+    : `<Link
+            href="${contactHref}"
+            className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-500 transition duration-200"
+          >
+            Start Editing
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>`;
+
   await writeFileSafe(
     path.join(plan.targetPath, 'src/components/layout/Navbar.tsx'),
     `${importLink}import { siteConfig } from '@/lib/site-config';
+import { Layers, ArrowRight } from 'lucide-react';
 
 export function Navbar() {
   return (
-    <header className="border-b border-slate-200 bg-white">
+    <header className="sticky top-0 z-50 w-full border-b border-slate-200/80 bg-white/80 backdrop-blur-md">
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <div className="text-sm font-semibold tracking-tight text-slate-950">
-          {siteConfig.name}
+        <div className="flex items-center gap-2">
+          <Layers className="h-6 w-6 text-blue-600" />
+          <span className="text-base font-bold tracking-tight text-slate-900">
+            {siteConfig.name}
+          </span>
         </div>
 
-        <div className="flex gap-5 text-sm text-slate-600">
+        <div className="flex items-center gap-6">
+          <div className="hidden md:flex gap-6 text-sm">
 ${links}
+          </div>
+          ${ctaElement}
         </div>
       </nav>
     </header>
@@ -148,11 +173,54 @@ async function writeFooter(plan: CreatePlan): Promise<void> {
   await writeFileSafe(
     path.join(plan.targetPath, 'src/components/layout/Footer.tsx'),
     `import { siteConfig } from '@/lib/site-config';
+import { Github, ExternalLink, Sparkles } from 'lucide-react';
 
 export function Footer() {
   return (
-    <footer className="border-t border-slate-200 px-6 py-8 text-center text-sm text-slate-600">
-      © {new Date().getFullYear()} {siteConfig.name}. All rights reserved.
+    <footer className="border-t border-slate-200/80 bg-slate-50/50 py-12 px-6">
+      <div className="mx-auto max-w-6xl">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="text-center md:text-left">
+            <div className="flex items-center justify-center md:justify-start gap-2">
+              <Sparkles className="h-5 w-5 text-blue-600" />
+              <h3 className="font-bold text-slate-900 text-base">{siteConfig.name}</h3>
+            </div>
+            <p className="mt-1.5 text-sm text-slate-500 max-w-md">
+              A premium, production-shaped starter template generated to jumpstart your development workflow.
+            </p>
+          </div>
+          <div className="flex gap-6 text-sm">
+            <a
+              href="${starterBranding.githubUrl}"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-slate-500 hover:text-slate-900 transition font-medium"
+            >
+              <Github className="h-4 w-4" />
+              GitHub
+            </a>
+            <a
+              href="${starterBranding.mediumUrl}"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-slate-500 hover:text-slate-900 transition font-medium"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Medium Docs
+            </a>
+          </div>
+        </div>
+        <div className="mt-8 pt-8 border-t border-slate-200/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+          <div>
+            © {new Date().getFullYear()} {siteConfig.name}. All rights reserved.
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span>Generated with ${starterBranding.cliName} ${starterBranding.version}</span>
+            <span className="text-slate-300">•</span>
+            <span className="font-medium text-slate-500">${starterBranding.releaseName}</span>
+          </div>
+        </div>
+      </div>
     </footer>
   );
 }
@@ -213,31 +281,458 @@ async function writeSectionComponent(
     section === 'contact' && plan.modules.includes('contact-form');
 
   const contactImport = shouldRenderContactForm
-    ? `import { ContactForm } from '@/components/forms/ContactForm';\n\n`
+    ? `import { ContactForm } from '@/components/forms/ContactForm';\n`
     : '';
 
   const contactForm = shouldRenderContactForm
     ? `
-      <div className="mt-8 max-w-xl">
+      <div className="mt-8 max-w-xl mx-auto">
         <ContactForm />
       </div>`
-    : '';
+    : `
+      <div className="mt-8 rounded-2xl border border-slate-200/80 bg-white p-8 text-center max-w-xl mx-auto shadow-sm">
+        <p className="text-sm text-slate-500">Contact form placeholder. Enable the "Contact form placeholder" module to generate the interactive form component.</p>
+        <a href="mailto:hello@example.com" className="inline-block mt-4 text-sm font-semibold text-blue-600 hover:text-blue-500">hello@example.com</a>
+      </div>`;
+
+  let sectionContent = '';
+  let imports = '';
+
+  switch (section) {
+    case 'hero':
+      imports = `import { Sparkles, ArrowRight, Zap, ShieldCheck, Rocket } from 'lucide-react';\n`;
+      sectionContent = `    <section id="hero" className="relative mx-auto max-w-6xl px-6 pt-28 pb-24 text-center overflow-hidden">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 h-72 w-72 rounded-full bg-blue-400/10 blur-3xl pointer-events-none" />
+      
+      <div className="mx-auto max-w-3xl">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3.5 py-1.5 text-xs font-semibold text-blue-700 ring-1 ring-inset ring-blue-700/10">
+          <Sparkles className="h-3.5 w-3.5 animate-pulse" />
+          v1.3.0 • Premium Blueprint Starters
+        </span>
+        <h1 className="mt-8 text-4xl font-extrabold tracking-tight text-slate-900 sm:text-6xl bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-500 bg-clip-text text-transparent">
+          Build Your Next Big Idea Faster
+        </h1>
+        <p className="mt-6 text-lg leading-8 text-slate-600 max-w-2xl mx-auto font-medium">
+          A premium Next.js starter generated by project-cli, pre-integrated with Tailwind CSS and Lucide React. Ready for production-scale customization.
+        </p>
+        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a
+            href="#features"
+            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 text-sm font-semibold text-white shadow-md shadow-blue-500/20 hover:bg-blue-500 transition duration-200"
+          >
+            Explore Features
+            <ArrowRight className="h-4 w-4" />
+          </a>
+          <a
+            href="#contact"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white/80 px-6 py-3.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition duration-200"
+          >
+            Get in Touch
+          </a>
+        </div>
+      </div>
+      
+      <div className="mx-auto mt-20 grid max-w-4xl grid-cols-1 gap-6 sm:grid-cols-3">
+        {[
+          { label: 'Developer Setup Time', value: 'Under 5m', icon: Zap, color: 'text-amber-500 bg-amber-50' },
+          { label: 'Next.js App Build Uptime', value: '99.9%', icon: ShieldCheck, color: 'text-emerald-500 bg-emerald-50' },
+          { label: 'Visual Component Quality', value: 'Premium', icon: Rocket, color: 'text-indigo-500 bg-indigo-50' }
+        ].map((stat, idx) => {
+          const Icon = stat.icon;
+          return (
+            <div key={idx} className="flex items-center gap-4 rounded-2xl border border-slate-200/80 bg-white/70 p-6 backdrop-blur-sm shadow-sm hover:shadow-md hover:translate-y-[-2px] transition duration-300">
+              <span className={\`p-3 rounded-xl \${stat.color} flex items-center justify-center\`}>
+                <Icon className="h-6 w-6" />
+              </span>
+              <div className="text-left">
+                <dt className="text-xs font-semibold uppercase tracking-wider text-slate-400">{stat.label}</dt>
+                <dd className="text-xl font-bold tracking-tight text-slate-900">{stat.value}</dd>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>`;
+      break;
+
+    case 'features':
+      imports = `import { Zap, ShieldCheck, Layers, Smartphone, Database, Code2 } from 'lucide-react';\n`;
+      sectionContent = `    <section id="features" className="mx-auto max-w-6xl px-6 py-24 border-t border-slate-200/50">
+      <div className="text-center max-w-3xl mx-auto">
+        <p className="text-xs font-bold uppercase tracking-widest text-blue-600">Core Features</p>
+        <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+          Everything You Need to Launch
+        </h2>
+        <p className="mt-4 text-base text-slate-500 leading-relaxed font-medium">
+          Boilerplate setups waste hours of development time. This blueprint handles structure, tooling, and layouts out of the box.
+        </p>
+      </div>
+
+      <div className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        {[
+          { title: 'Next.js 16 App Router', desc: 'Leverage React Server Components and file-based layouts for blazing fast loads.', icon: Layers, color: 'text-blue-600 bg-blue-50' },
+          { title: 'Tailwind CSS v4 Styling', desc: 'Pre-configured color palettes and responsive breakpoints make updating UI a breeze.', icon: Zap, color: 'text-amber-600 bg-amber-50' },
+          { title: 'TypeScript Core', desc: 'Robust type safety ensures fewer runtime exceptions and a better coding experience.', icon: Code2, color: 'text-indigo-600 bg-indigo-50' },
+          { title: 'Responsive Design First', desc: 'Designed to fit and feel premium on mobile viewports as well as large desktop displays.', icon: Smartphone, color: 'text-pink-600 bg-pink-50' },
+          { title: 'Data Store Support', desc: 'Pre-configured Prisma and PostgreSQL modules are available in the project plan.', icon: Database, color: 'text-emerald-600 bg-emerald-50' },
+          { title: 'Secure Environments', desc: 'Strict env checks and GitHub Actions CI pipelines compile and lint code continuously.', icon: ShieldCheck, color: 'text-purple-600 bg-purple-50' }
+        ].map((feat, idx) => {
+          const Icon = feat.icon;
+          return (
+            <div key={idx} className="group rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm hover:shadow-md hover:translate-y-[-2px] transition duration-300">
+              <span className={\`inline-flex p-3 rounded-xl \${feat.color} group-hover:scale-110 transition duration-200\`}>
+                <Icon className="h-6 w-6" />
+              </span>
+              <h3 className="mt-4 text-lg font-bold text-slate-905">{feat.title}</h3>
+              <p className="mt-2 text-sm text-slate-500 leading-relaxed font-medium">{feat.desc}</p>
+            </div>
+          );
+        })}
+      </div>
+    </section>`;
+      break;
+
+    case 'about':
+      imports = `import { CheckCircle2, BookOpen } from 'lucide-react';\n`;
+      sectionContent = `    <section id="about" className="mx-auto max-w-6xl px-6 py-24 border-t border-slate-200/50">
+      <div className="grid gap-12 lg:grid-cols-2 items-center">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-widest text-blue-600">About the Project</p>
+          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+            Designed for Modern Web Creators
+          </h2>
+          <p className="mt-6 text-base text-slate-600 leading-relaxed font-medium">
+            Our blueprint templates serve as robust launchpads for a wide variety of web applications. We believe that developer tooling should be clean, extensible, and aesthetically pleasing from the very first run.
+          </p>
+          <p className="mt-4 text-base text-slate-600 leading-relaxed font-medium">
+            Whether you are building a corporate landing page, a complex SaaS platform, or an interactive AI assistant, this codebase provides the structural consistency and quality standards you need.
+          </p>
+        </div>
+        <div className="rounded-2xl border border-slate-200/80 bg-gradient-to-br from-indigo-50/50 to-blue-50/50 p-8 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 right-0 -translate-y-4 translate-x-4 h-24 w-24 bg-indigo-500/5 rounded-full blur-2xl" />
+          <div className="flex items-center gap-2 mb-6">
+            <BookOpen className="h-5 w-5 text-indigo-600" />
+            <h3 className="text-base font-bold text-slate-950">Starter Architecture Checklist</h3>
+          </div>
+          <ul className="space-y-4 text-sm text-slate-705 font-medium">
+            {[
+              'Zero configuration required to start local development',
+              'Highly structured and modular layout system',
+              'Tailwind configurations pre-tuned for high legibility',
+              'Built-in support for search engine optimization best practices'
+            ].map((item, idx) => (
+              <li key={idx} className="flex gap-3">
+                <CheckCircle2 className="h-5 w-5 text-indigo-600 flex-shrink-0" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </section>`;
+      break;
+
+    case 'pricing':
+      imports = `import { Check } from 'lucide-react';\n`;
+      sectionContent = `    <section id="pricing" className="mx-auto max-w-6xl px-6 py-24 border-t border-slate-200/50">
+      <div className="text-center max-w-3xl mx-auto">
+        <p className="text-xs font-bold uppercase tracking-widest text-blue-600">Pricing Plans</p>
+        <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+          Simple, Transparent Pricing
+        </h2>
+        <p className="mt-4 text-base text-slate-500 leading-relaxed font-medium">
+          No hidden fees or complex contracts. Choose the model that matches your current scale.
+        </p>
+      </div>
+
+      <div className="mt-16 grid gap-8 md:grid-cols-2 max-w-4xl mx-auto">
+        {[
+          { name: 'Starter', price: '$0', desc: 'Ideal for prototyping and personal projects.', features: ['1 User License', 'Community Support', 'Lifetime Free Updates', 'Basic Analytics'], highlight: false },
+          { name: 'Pro', price: '$29', desc: 'Perfect for commercial products and scaling.', features: ['Unlimited Projects', 'Priority Email Support', 'Custom Branding', 'Advanced SEO & Integrations'], highlight: true }
+        ].map((plan, idx) => (
+          <div key={idx} className={\`rounded-2xl border p-8 shadow-sm flex flex-col justify-between hover:shadow-md hover:translate-y-[-2px] transition duration-300 \${plan.highlight ? 'border-blue-600 ring-1 ring-blue-600 bg-white' : 'border-slate-200/80 bg-white/60'}\`}>
+            <div>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold text-slate-955">{plan.name}</h3>
+                {plan.highlight && (
+                  <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 ring-1 ring-inset ring-blue-700/10">Popular</span>
+                )}
+              </div>
+              <p className="mt-4 text-sm text-slate-500 leading-relaxed font-medium">{plan.desc}</p>
+              <p className="mt-6 flex items-baseline gap-x-1">
+                <span className="text-4xl font-extrabold tracking-tight text-slate-900">{plan.price}</span>
+                <span className="text-sm font-semibold leading-6 text-slate-500">/month</span>
+              </p>
+              <ul className="mt-8 space-y-4 text-sm text-slate-700 font-medium border-t border-slate-105 pt-6">
+                {plan.features.map((feat, fidx) => (
+                  <li key={fidx} className="flex gap-x-3 items-center">
+                    <Check className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                    <span>{feat}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="mt-8">
+              <a
+                href="#contact"
+                className={\`block w-full text-center rounded-xl py-3.5 px-4 text-sm font-semibold transition duration-200 \${plan.highlight ? 'bg-blue-600 text-white hover:bg-blue-500 shadow-md shadow-blue-500/20' : 'bg-slate-100 text-slate-900 hover:bg-slate-200'}\`}
+              >
+                Get Started
+              </a>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>`;
+      break;
+
+    case 'faq':
+      imports = `import { HelpCircle } from 'lucide-react';\n`;
+      sectionContent = `    <section id="faq" className="mx-auto max-w-4xl px-6 py-24 border-t border-slate-200/50">
+      <div className="text-center mb-16">
+        <p className="text-xs font-bold uppercase tracking-widest text-blue-600">FAQ</p>
+        <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900">
+          Frequently Asked Questions
+        </h2>
+      </div>
+
+      <div className="space-y-6">
+        {[
+          { q: 'How do I customize this template?', a: 'You can easily customize this template by editing the code in src/app. All layouts, pages, and components use standard React and Tailwind CSS.' },
+          { q: 'Is there a commercial license?', a: 'Yes. The boilerplate is generated under the MIT license, meaning you can build personal and commercial software with it.' },
+          { q: 'Can I integrate a database?', a: 'Absolutely. You can run the Prisma feature module generator to add PostgreSQL support automatically or connect your own API layer.' }
+        ].map((faq, idx) => (
+          <div key={idx} className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm flex gap-4">
+            <HelpCircle className="h-6 w-6 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="text-base font-bold text-slate-955">{faq.q}</h3>
+              <p className="mt-2 text-sm text-slate-505 leading-relaxed font-medium">{faq.a}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>`;
+      break;
+
+    case 'contact':
+      imports = `import { Mail, Phone, MapPin, Clock } from 'lucide-react';\n`;
+      sectionContent = `    <section id="contact" className="mx-auto max-w-6xl px-6 py-24 border-t border-slate-200/50">
+      <div className="max-w-3xl mx-auto text-center mb-16">
+        <p className="text-xs font-bold uppercase tracking-widest text-blue-600">Get In Touch</p>
+        <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+          Connect With Us
+        </h2>
+        <p className="mt-4 text-base text-slate-500 font-medium">
+          Have questions or want to collaborate? Send us a message and we will respond as soon as possible.
+        </p>
+      </div>
+
+      <div className="grid gap-8 lg:grid-cols-3 max-w-5xl mx-auto">
+        <div className="lg:col-span-1 space-y-6">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h3 className="font-bold text-slate-950 text-base mb-4">Contact Information</h3>
+            <ul className="space-y-4 text-sm text-slate-600 font-medium">
+              <li className="flex items-center gap-3">
+                <Mail className="h-5 w-5 text-blue-600" />
+                <span>hello@example.com</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <Phone className="h-5 w-5 text-blue-600" />
+                <span>+1 (555) 000-0000</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <MapPin className="h-5 w-5 text-blue-600" />
+                <span>San Francisco, CA</span>
+              </li>
+            </ul>
+          </div>
+
+          <div className="rounded-2xl border border-blue-105 bg-blue-50/50 p-6 shadow-sm flex items-start gap-4">
+            <Clock className="h-6 w-6 text-blue-600 flex-shrink-0" />
+            <div>
+              <h4 className="text-sm font-bold text-blue-900">Response Window</h4>
+              <p className="mt-1 text-xs text-blue-700 leading-relaxed font-medium">
+                Our support team is online Monday through Friday, responding to all inquiries within 12 hours.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="lg:col-span-2">
+          ${contactForm}
+        </div>
+      </div>
+    </section>`;
+      break;
+
+    case 'projects':
+      imports = `import { FolderGit2, ArrowUpRight } from 'lucide-react';\n`;
+      sectionContent = `    <section id="projects" className="mx-auto max-w-6xl px-6 py-24 border-t border-slate-200/50">
+      <div className="text-center max-w-3xl mx-auto mb-16">
+        <p className="text-xs font-bold uppercase tracking-widest text-blue-600">Projects</p>
+        <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+          Our Latest Work
+        </h2>
+        <p className="mt-4 text-base text-slate-500 font-medium">
+          Explore the projects and products we have built using modern frameworks.
+        </p>
+      </div>
+
+      <div className="mt-12 grid gap-8 md:grid-cols-2 max-w-4xl mx-auto">
+        {[
+          { title: 'Alpha Platform', desc: 'A secure cloud platform for managing large-scale server operations.', category: 'SaaS', link: '#' },
+          { title: 'Beta Analytics', desc: 'Next-gen analytics engine for tracking real-time user behavior graphs.', category: 'Web App', link: '#' }
+        ].map((item, idx) => (
+          <div key={idx} className="group rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm hover:shadow-md hover:translate-y-[-2px] transition duration-300">
+            <div className="flex justify-between items-start">
+              <span className="inline-block rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">{item.category}</span>
+              <FolderGit2 className="h-5 w-5 text-slate-400 group-hover:text-blue-600 transition" />
+            </div>
+            <h3 className="mt-6 text-xl font-bold text-slate-950">{item.title}</h3>
+            <p className="mt-2 text-sm text-slate-505 leading-relaxed font-medium">{item.desc}</p>
+            <a href={item.link} className="inline-flex items-center gap-1 mt-6 text-sm font-semibold text-blue-600 hover:text-blue-500 transition">
+              View Project
+              <ArrowUpRight className="h-4 w-4" />
+            </a>
+          </div>
+        ))}
+      </div>
+    </section>`;
+      break;
+
+    case 'blog':
+      imports = `import { BookOpen, Clock, ArrowRight } from 'lucide-react';\n`;
+      sectionContent = `    <section id="blog" className="mx-auto max-w-6xl px-6 py-24 border-t border-slate-200/50">
+      <div className="text-center max-w-3xl mx-auto mb-16">
+        <p className="text-xs font-bold uppercase tracking-widest text-blue-600">Blog</p>
+        <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+          From the Journal
+        </h2>
+        <p className="mt-4 text-base text-slate-500 font-medium">
+          Read our latest insights, tutorials, and engineering deep dives.
+        </p>
+      </div>
+
+      <div className="mt-12 grid gap-8 md:grid-cols-2 max-w-4xl mx-auto">
+        {[
+          { title: 'Accelerating Development with project-cli', desc: 'Discover how blueprint-driven CLI scaffolding saves developers time and enforces consistency.', date: 'Jun 15, 2026', readTime: '5 min read' },
+          { title: 'The Power of Next.js & Tailwind CSS', desc: 'A deep-dive into why the combination of Next.js and Tailwind is the ultimate tech stack for builders.', date: 'Jun 12, 2026', readTime: '3 min read' }
+        ].map((post, idx) => (
+          <article key={idx} className="group rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm hover:shadow-md hover:translate-y-[-2px] transition duration-300 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center gap-x-3 text-xs text-slate-400 font-medium">
+                <time>{post.date}</time>
+                <span>•</span>
+                <span className="flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  {post.readTime}
+                </span>
+              </div>
+              <h3 className="mt-4 text-lg font-bold text-slate-950 group-hover:text-blue-600 transition">
+                {post.title}
+              </h3>
+              <p className="mt-2 text-sm text-slate-500 leading-relaxed font-medium">{post.desc}</p>
+            </div>
+            <div className="mt-6 border-t border-slate-50 pt-4 flex items-center justify-between">
+              <span className="inline-flex items-center gap-1 text-sm font-semibold text-blue-600 group-hover:text-blue-500 transition cursor-pointer">
+                Read article
+                <ArrowRight className="h-4 w-4" />
+              </span>
+              <BookOpen className="h-4 w-4 text-slate-300" />
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>`;
+      break;
+
+    case 'services':
+      imports = `import { Laptop, Cpu, Plug } from 'lucide-react';\n`;
+      sectionContent = `    <section id="services" className="mx-auto max-w-6xl px-6 py-24 border-t border-slate-200/50">
+      <div className="text-center max-w-3xl mx-auto mb-16">
+        <p className="text-xs font-bold uppercase tracking-widest text-blue-600">Services</p>
+        <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+          Our Specializations
+        </h2>
+        <p className="mt-4 text-base text-slate-505 font-medium">
+          We offer specialized engineering services to bring your concepts to life.
+        </p>
+      </div>
+
+      <div className="mt-12 grid gap-8 md:grid-cols-3 max-w-5xl mx-auto">
+        {[
+          { title: 'Custom Development', desc: 'End-to-end design and engineering of high-performance web applications.', icon: Laptop, color: 'text-blue-600 bg-blue-50' },
+          { title: 'Technical Consulting', desc: 'Architecture reviews, performance tuning, and software scale planning.', icon: Cpu, color: 'text-indigo-600 bg-indigo-50' },
+          { title: 'API Integration', desc: 'Seamlessly connect database layers, cloud providers, and AI endpoints.', icon: Plug, color: 'text-amber-600 bg-amber-50' }
+        ].map((item, idx) => {
+          const Icon = item.icon;
+          return (
+            <div key={idx} className="group rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm hover:shadow-md hover:translate-y-[-2px] transition duration-300">
+              <span className={\`inline-flex p-3 rounded-xl \... \${item.color} group-hover:scale-110 transition duration-200\`}>
+                <Icon className="h-6 w-6" />
+              </span>
+              <h3 className="mt-4 text-lg font-bold text-slate-950">{item.title}</h3>
+              <p className="mt-2 text-sm text-slate-500 leading-relaxed font-medium">{item.desc}</p>
+            </div>
+          );
+        })}
+      </div>
+    </section>`;
+      // Let's fix the template syntax bug above: replace '\... ' with ''
+      sectionContent = sectionContent.replace('... ', '');
+      break;
+
+    case 'testimonials':
+      imports = `import { Quote } from 'lucide-react';\n`;
+      sectionContent = `    <section id="testimonials" className="mx-auto max-w-5xl px-6 py-24 border-t border-slate-200/50">
+      <div className="text-center mb-16">
+        <p className="text-xs font-bold uppercase tracking-widest text-blue-600">Testimonials</p>
+        <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900">
+          Trusted by Builders
+        </h2>
+      </div>
+
+      <div className="grid gap-8 md:grid-cols-2">
+        {[
+          { quote: 'This CLI and template completely transformed our prototype cycle. The generated code is incredibly clean and easily adaptable.', author: 'Alex Rivera', role: 'CTO, TechVenture' },
+          { quote: 'Highly recommended starter for any developer using Next.js. Spared us hours of layout, structure, and configuration design.', author: 'Sarah Chen', role: 'Senior Developer, InnovateCo' }
+        ].map((q, idx) => (
+          <figure key={idx} className="relative rounded-2xl border border-slate-200/80 bg-white/50 p-6 shadow-sm backdrop-blur-sm">
+            <Quote className="absolute top-6 right-6 h-8 w-8 text-blue-500/10 pointer-events-none" />
+            <blockquote className="text-slate-705 text-sm leading-relaxed italic font-medium pr-8">
+              “{q.quote}”
+            </blockquote>
+            <figcaption className="mt-6 flex items-center gap-x-3 border-t border-slate-100 pt-4">
+              <div>
+                <div className="text-sm font-bold text-slate-950">{q.author}</div>
+                <div className="text-xs text-slate-400 font-medium">{q.role}</div>
+              </div>
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+    </section>`;
+      break;
+
+    default:
+      sectionContent = `    <section id="${section}" className="mx-auto max-w-6xl px-6 py-20">
+      <p className="mb-3 text-sm font-medium uppercase tracking-wide text-blue-600">
+        \${toTitle(section)}
+      </p>
+      <h2 className="max-w-3xl text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+        \${toTitle(section)} Section
+      </h2>
+      <p className="mt-4 max-w-2xl text-slate-600">
+        Replace this starter content with your real \${section} content.
+      </p>
+    </section>`;
+  }
 
   await writeFileSafe(
     path.join(plan.targetPath, `src/components/sections/${componentName}.tsx`),
-    `${contactImport}export function ${componentName}() {
+    `${imports}${contactImport}export function ${componentName}() {
   return (
-    <section id="${section}" className="mx-auto max-w-6xl px-6 py-20">
-      <p className="mb-3 text-sm font-medium uppercase tracking-wide text-slate-500">
-        ${toTitle(section)}
-      </p>
-      <h2 className="max-w-3xl text-3xl font-bold tracking-tight text-slate-950">
-        ${toTitle(section)} section
-      </h2>
-      <p className="mt-4 max-w-2xl text-slate-600">
-        Replace this starter content with your real ${section} content.
-      </p>${contactForm}
-    </section>
+${sectionContent}
   );
 }
 `
@@ -263,41 +758,303 @@ async function writeWebsitePage(plan: CreatePlan, page: string): Promise<void> {
     : path.join(plan.targetPath, `src/app/${page}/page.tsx`);
 
   const componentName = isHome ? 'HomePage' : `${toPascal(page)}Page`;
-  const heading = isHome ? toTitle(plan.projectName) : toTitle(page);
-
   const contactImport = shouldRenderContactForm
     ? `import { ContactForm } from '@/components/forms/ContactForm';\n`
     : '';
 
   const contactForm = shouldRenderContactForm
     ? `
-        <div className="mt-8 max-w-xl">
+        <div className="mt-8 max-w-xl mx-auto">
           <ContactForm />
         </div>`
-    : '';
+    : `
+        <div className="mt-8 rounded-2xl border border-slate-200/80 bg-white p-8 text-center max-w-xl mx-auto shadow-sm">
+          <p className="text-sm text-slate-500">Contact form placeholder. Enable the "Contact form placeholder" module to generate the interactive form component.</p>
+          <a href="mailto:hello@example.com" className="inline-block mt-4 text-sm font-semibold text-blue-600 hover:text-blue-500">hello@example.com</a>
+        </div>`;
+
+  let pageContent = '';
+
+  const iconImports = [];
+  if (page === 'home') iconImports.push('Sparkles', 'ArrowRight', 'Layers', 'Zap', 'ShieldCheck');
+  if (page === 'about') iconImports.push('CheckCircle2', 'BookOpen');
+  if (page === 'services') iconImports.push('Laptop', 'Cpu', 'Plug');
+  if (page === 'projects') iconImports.push('FolderGit2', 'ArrowUpRight');
+  if (page === 'blog') iconImports.push('BookOpen', 'Clock', 'ArrowRight');
+  if (page === 'contact') iconImports.push('Mail', 'Phone', 'MapPin', 'Clock');
+
+  const lucideImport = iconImports.length > 0 ? `import { ${iconImports.join(', ')} } from 'lucide-react';\n` : '';
+
+  switch (page) {
+    case 'home':
+      pageContent = `      <main className="mx-auto max-w-6xl px-6 pt-24 pb-20 text-center">
+        <div className="mx-auto max-w-3xl">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3.5 py-1.5 text-xs font-semibold text-blue-700 ring-1 ring-inset ring-blue-700/10 mb-8">
+            <Sparkles className="h-3.5 w-3.5 animate-pulse" />
+            Multi-Page Website Starter
+          </span>
+          <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-slate-900 sm:text-6xl bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-500 bg-clip-text text-transparent">
+            Welcome to ${toTitle(plan.projectName)}
+          </h1>
+          <p className="mt-6 text-lg leading-8 text-slate-600 max-w-2xl mx-auto font-medium">
+            A beautiful, multi-page website architecture pre-built with responsive layouts, sticky header, customized footer, and modular code structures.
+          </p>
+          <div className="mt-10 flex items-center justify-center gap-x-6">
+            <Link
+              href="/about"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition duration-200"
+            >
+              Learn More About Us
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link
+              href="/contact"
+              className="text-sm font-semibold leading-6 text-slate-900 hover:text-blue-600 transition"
+            >
+              Get in Touch
+            </Link>
+          </div>
+        </div>
+
+        <div className="mx-auto mt-20 max-w-5xl border-t border-slate-200/80 pt-16">
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900 mb-8">What makes us different</h2>
+          <div className="grid gap-8 sm:grid-cols-3">
+            {[
+              { title: 'Modular Architecture', desc: 'Standardized layout, navigation, and page styles.', icon: Layers },
+              { title: 'Tailwind Stylings', desc: 'Pre-configured color schemes, spacing patterns, and responsive breaks.', icon: Zap },
+              { title: 'SEO Optimized', desc: 'Auto-configured sitemaps and robots rules for crawler support.', icon: ShieldCheck }
+            ].map((item, idx) => {
+              const Icon = item.icon;
+              return (
+                <div key={idx} className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm text-left">
+                  <span className="inline-flex p-2 rounded-lg bg-blue-50 text-blue-600 mb-4">
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <h3 className="font-bold text-slate-950">{item.title}</h3>
+                  <p className="mt-2 text-sm text-slate-500 leading-relaxed font-medium">{item.desc}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </main>`;
+      break;
+
+    case 'about':
+      pageContent = `      <main className="mx-auto max-w-6xl px-6 py-20">
+        <div className="max-w-3xl">
+          <p className="text-xs font-bold uppercase tracking-widest text-blue-600">About Us</p>
+          <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
+            Designed for Modern Creators
+          </h1>
+          <p className="mt-6 text-lg text-slate-600 leading-relaxed font-medium">
+            Our mission is to supply modular, scalable blueprint projects that enable teams to build robust software without getting bogged down by boilerplate environment setups.
+          </p>
+        </div>
+
+        <div className="mt-16 grid gap-8 md:grid-cols-3">
+          {[
+            { title: 'Our Vision', desc: 'To provide developer tooling that is clean, extensible, and aesthetically pleasing from the very first launch.', icon: BookOpen },
+            { title: 'Our Strategy', desc: 'Scaffold real layouts, sitemaps, components, and schema integrations based on high-level developer intents.', icon: CheckCircle2 },
+            { title: 'Our Values', desc: 'Prioritize type safety, accessibility, modern styling standards, and clean, readable code.', icon: CheckCircle2 }
+          ].map((card, idx) => {
+            const Icon = card.icon;
+            return (
+              <div key={idx} className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">
+                <span className="inline-flex p-2 rounded-lg bg-indigo-50 text-indigo-600 mb-4">
+                  <Icon className="h-5 w-5" />
+                </span>
+                <h2 className="text-lg font-bold text-slate-950">{card.title}</h2>
+                <p className="mt-2 text-sm text-slate-500 leading-relaxed font-medium">{card.desc}</p>
+              </div>
+            );
+          })}
+        </div>
+      </main>`;
+      break;
+
+    case 'services':
+      pageContent = `      <main className="mx-auto max-w-6xl px-6 py-20">
+        <div className="max-w-3xl">
+          <p className="text-xs font-bold uppercase tracking-widest text-blue-600">Our Services</p>
+          <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
+            Specialized Engineering Solutions
+          </h1>
+          <p className="mt-6 text-lg text-slate-600 leading-relaxed font-medium">
+            We provide high-quality developer templates, technical architecture consulting, and advanced application integration services.
+          </p>
+        </div>
+
+        <div className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          {[
+            { title: 'Custom Web Development', desc: 'End-to-end design, implementation, and deployment of responsive modern web products.', icon: Laptop },
+            { title: 'Technical Consulting', desc: 'Architecture review, technology stack recommendations, and database schema layouts.', icon: Cpu },
+            { title: 'API & Microservice Integration', desc: 'Seamlessly hook databases, caching solutions, external modules, and third-party APIs.', icon: Plug }
+          ].map((item, idx) => {
+            const Icon = item.icon;
+            return (
+              <div key={idx} className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm hover:shadow-md transition duration-200">
+                <span className="inline-flex p-2 rounded-lg bg-blue-50 text-blue-600 mb-4">
+                  <Icon className="h-5 w-5" />
+                </span>
+                <h2 className="mt-4 text-lg font-bold text-slate-950">{item.title}</h2>
+                <p className="mt-2 text-sm text-slate-500 leading-relaxed font-medium">{item.desc}</p>
+              </div>
+            );
+          })}
+        </div>
+      </main>`;
+      break;
+
+    case 'projects':
+      pageContent = `      <main className="mx-auto max-w-6xl px-6 py-20">
+        <div className="max-w-3xl">
+          <p className="text-xs font-bold uppercase tracking-widest text-blue-600">Portfolio</p>
+          <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
+            Our Latest Work
+          </h1>
+          <p className="mt-6 text-lg text-slate-600 leading-relaxed font-medium">
+            Explore the responsive web projects, dashboard suites, and custom AI implementations we have delivered.
+          </p>
+        </div>
+
+        <div className="mt-16 grid gap-8 md:grid-cols-2 max-w-4xl">
+          {[
+            { title: 'Alpha Platform', desc: 'Secure cloud platform for managing large-scale server operations.', category: 'SaaS Suite' },
+            { title: 'Beta Analytics', desc: 'Next-gen analytics engine for tracking real-time user behavior graphs.', category: 'Web Application' }
+          ].map((project, idx) => (
+            <div key={idx} className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm hover:shadow-md transition duration-200">
+              <div className="flex justify-between items-center mb-4">
+                <span className="inline-block rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600">{project.category}</span>
+                <FolderGit2 className="h-5 w-5 text-slate-400" />
+              </div>
+              <h2 className="text-xl font-bold text-slate-950">{project.title}</h2>
+              <p className="mt-2 text-sm text-slate-500 leading-relaxed font-medium">{project.desc}</p>
+              <span className="inline-flex items-center gap-1 mt-6 text-xs font-bold text-blue-600 cursor-pointer">
+                View Project Details
+                <ArrowUpRight className="h-3.5 w-3.5" />
+              </span>
+            </div>
+          ))}
+        </div>
+      </main>`;
+      break;
+
+    case 'blog':
+      pageContent = `      <main className="mx-auto max-w-6xl px-6 py-20">
+        <div className="max-w-3xl">
+          <p className="text-xs font-bold uppercase tracking-widest text-blue-600">Journal</p>
+          <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
+            Insights & Engineering
+          </h1>
+          <p className="mt-6 text-lg text-slate-600 leading-relaxed font-medium">
+            Stay updated with our latest tutorials, architectural deep-dives, and product design updates.
+          </p>
+        </div>
+
+        <div className="mt-16 grid gap-8 md:grid-cols-2 max-w-4xl">
+          {[
+            { title: 'Accelerating Development with project-cli', desc: 'Discover how blueprint-driven CLI scaffolding saves developers time and enforces consistency.', date: 'Jun 15, 2026', read: '5m read' },
+            { title: 'The Power of Next.js & Tailwind CSS', desc: 'A deep-dive into why the combination of Next.js and Tailwind is the ultimate tech stack for builders.', date: 'Jun 12, 2026', read: '3m read' }
+          ].map((post, idx) => (
+            <article key={idx} className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition duration-200">
+              <div>
+                <div className="flex gap-3 text-xs text-slate-400 font-medium">
+                  <time>{post.date}</time>
+                  <span>•</span>
+                  <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{post.read}</span>
+                </div>
+                <h2 className="mt-3 text-lg font-bold text-slate-950">{post.title}</h2>
+                <p className="mt-2 text-sm text-slate-505 leading-relaxed font-medium">{post.desc}</p>
+              </div>
+              <div className="mt-6 pt-4 border-t border-slate-50 flex items-center justify-between">
+                <span className="text-sm font-semibold text-blue-600 hover:text-blue-500 cursor-pointer inline-flex items-center gap-1">
+                  Read article
+                  <ArrowRight className="h-4 w-4" />
+                </span>
+                <BookOpen className="h-4 w-4 text-slate-300" />
+              </div>
+            </article>
+          ))}
+        </div>
+      </main>`;
+      break;
+
+    case 'contact':
+      pageContent = `      <main className="mx-auto max-w-6xl px-6 py-20">
+        <div className="max-w-2xl mx-auto text-center mb-16">
+          <p className="text-xs font-bold uppercase tracking-widest text-blue-600">Contact</p>
+          <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
+            Get in touch with us
+          </h1>
+          <p className="mt-4 text-base text-slate-500 font-medium">
+            Have questions or want to collaborate? Send us a message and we will respond as soon as possible.
+          </p>
+        </div>
+
+        <div className="grid gap-8 lg:grid-cols-3 max-w-5xl mx-auto">
+          <div className="lg:col-span-1 space-y-6">
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h3 className="font-bold text-slate-950 text-base mb-4">Contact Info</h3>
+              <ul className="space-y-4 text-sm text-slate-600 font-medium">
+                <li className="flex items-center gap-3">
+                  <Mail className="h-5 w-5 text-blue-600" />
+                  <span>hello@example.com</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Phone className="h-5 w-5 text-blue-600" />
+                  <span>+1 (555) 000-0000</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <MapPin className="h-5 w-5 text-blue-600" />
+                  <span>San Francisco, CA</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="rounded-2xl border border-blue-100 bg-blue-50/50 p-6 shadow-sm flex items-start gap-4">
+              <Clock className="h-6 w-6 text-blue-600 flex-shrink-0" />
+              <div>
+                <h4 className="text-sm font-bold text-blue-900">Response Speed</h4>
+                <p className="mt-1 text-xs text-blue-700 leading-relaxed font-medium">
+                  We check client inquiries multiple times a day and reply within 12 hours.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="lg:col-span-2">
+            ${contactForm}
+          </div>
+        </div>
+      </main>`;
+      break;
+
+    default:
+      pageContent = `      <main className="mx-auto max-w-6xl px-6 py-20">
+        <p className="mb-3 text-sm font-medium uppercase tracking-wide text-slate-500">
+          ${toTitle(page)}
+        </p>
+        <h1 className="max-w-3xl text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
+          ${toTitle(page)} page
+        </h1>
+        <p className="mt-4 max-w-2xl text-slate-600">
+          Replace this starter content with your real ${page} page content.
+        </p>
+      </main>`;
+  }
 
   await writeFileSafe(
     pagePath,
-    `${contactImport}import { Footer } from '@/components/layout/Footer';
+    `${lucideImport}${contactImport}import { Footer } from '@/components/layout/Footer';
 import { Navbar } from '@/components/layout/Navbar';
+import Link from 'next/link';
 
 export default function ${componentName}() {
   return (
     <>
       <Navbar />
-      <main className="mx-auto max-w-6xl px-6 py-20">
-        <p className="mb-3 text-sm font-medium uppercase tracking-wide text-slate-500">
-          ${isHome ? 'Home' : toTitle(page)}
-        </p>
-        <h1 className="max-w-3xl text-4xl font-bold tracking-tight text-slate-950">
-          ${heading}
-        </h1>
-        <p className="mt-4 max-w-2xl text-slate-600">
-          Replace this starter content with your real ${
-            isHome ? 'home page' : `${page} page`
-          } content.
-        </p>${contactForm}
-      </main>
+${pageContent}
       <Footer />
     </>
   );
@@ -311,47 +1068,51 @@ async function writeContactForm(plan: CreatePlan): Promise<void> {
     path.join(plan.targetPath, 'src/components/forms/ContactForm.tsx'),
     `export function ContactForm() {
   return (
-    <form className="space-y-4 rounded-xl border border-slate-200 p-6">
+    <form className="space-y-4 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">
       <div>
-        <label className="mb-2 block text-sm font-medium text-slate-700" htmlFor="name">
+        <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500" htmlFor="name">
           Name
         </label>
         <input
           id="name"
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-950"
+          className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm text-slate-800 placeholder-slate-400 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-500"
           placeholder="Your name"
           type="text"
+          required
         />
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-slate-700" htmlFor="email">
+        <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500" htmlFor="email">
           Email
         </label>
         <input
           id="email"
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-950"
+          className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm text-slate-800 placeholder-slate-400 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-500"
           placeholder="you@example.com"
           type="email"
+          required
         />
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-slate-700" htmlFor="message">
+        <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500" htmlFor="message">
           Message
         </label>
         <textarea
           id="message"
-          className="min-h-32 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-950"
+          rows={4}
+          className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm text-slate-800 placeholder-slate-400 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-500"
           placeholder="Tell us about your project..."
+          required
         />
       </div>
 
       <button
-        className="rounded-md bg-slate-950 px-5 py-2.5 text-sm font-medium text-white"
+        className="w-full rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition"
         type="submit"
       >
-        Send message
+        Send Message
       </button>
     </form>
   );

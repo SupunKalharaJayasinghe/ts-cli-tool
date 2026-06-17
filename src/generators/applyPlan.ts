@@ -4,8 +4,12 @@ import { applyFeatureModules } from './applyFeatureModules.js';
 import { applyFullstackPlan } from './applyFullstackPlan.js';
 import { applyWebsitePlan } from './applyWebsitePlan.js';
 import { writeGeneratedReadme } from './writeGeneratedReadme.js';
+import { writeGlobalsCss } from './starterBranding.js';
 
 export async function applyPlan(plan: CreatePlan): Promise<void> {
+  // Overwrite globals.css with the polished light theme styling
+  await writeGlobalsCss(plan.targetPath);
+
   if (plan.blueprint === 'website') {
     await applyWebsitePlan(plan);
   }

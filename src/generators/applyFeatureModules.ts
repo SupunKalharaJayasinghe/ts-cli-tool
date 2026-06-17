@@ -50,6 +50,9 @@ async function updateGeneratedPackageJson(plan: CreatePlan): Promise<void> {
 
   scripts.typecheck = 'tsc --noEmit';
 
+  // Add lucide-react for premium icons across all starter projects
+  dependencies['lucide-react'] = '^0.400.0';
+
   if (plan.modules.includes('prisma')) {
     dependencies['@prisma/client'] = '^6.0.0';
     devDependencies.prisma = '^6.0.0';
