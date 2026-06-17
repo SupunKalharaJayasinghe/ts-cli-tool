@@ -17,7 +17,7 @@ Current supported blueprints:
 The CLI flow:
 
 ```txt
-my-cli create
+project-cli create
 ↓
 Project name
 ↓
@@ -81,25 +81,27 @@ Or link it globally for local development:
 
 ```bash
 npm link
-my-cli create
+project-cli create
 ```
+
+`my-cli` is also available as a backward-compatible alias.
 
 ## Commands
 
-### `my-cli greet <name>`
+### `project-cli greet <name>`
 
 Prints a test greeting.
 
 ```bash
-my-cli greet Supun
+project-cli greet Supun
 ```
 
-### `my-cli create`
+### `project-cli create`
 
 Starts the project scaffolding flow.
 
 ```bash
-my-cli create
+project-cli create
 ```
 
 ## Blueprint: Website
