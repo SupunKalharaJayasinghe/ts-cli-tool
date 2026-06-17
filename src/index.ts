@@ -7,8 +7,8 @@ import { registerGreetCommand } from './commands/greet.js';
 const program = new Command();
 
 program
-  .name('my-cli')
-  .description('A powerful, strongly-typed CLI tool')
+  .name('project-cli')
+  .description('An intent-based TypeScript project scaffolder')
   .version('1.0.0');
 
 registerGreetCommand(program);

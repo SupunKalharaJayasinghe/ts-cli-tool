@@ -4,7 +4,8 @@
   "description": "> A powerful, strongly-typed command-line interface.",
   "main": "dist/index.js",
   "bin": {
-    "my-cli": "./dist/index.js"
+    "my-cli": "./dist/index.js",
+    "project-cli": "./dist/index.js"
   },
   "scripts": {
     "build": "tsc",
