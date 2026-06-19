@@ -2,24 +2,13 @@ import { confirm, input } from '@inquirer/prompts';
 import path from 'node:path';
 import type { BasicScaffoldOptions } from '../types.js';
 import { pathExists } from '../utils/pathExists.js';
+import { validateProjectNamePrompt } from '../utils/validateProjectName.js';
 
 export async function askBasicScaffoldOptions(): Promise<BasicScaffoldOptions> {
   const projectName = await input({
     message: 'What is the name of your project?',
     default: 'my-new-app',
-    validate: async (value) => {
-      if (!/^[a-z0-9-_]+$/i.test(value)) {
-        return 'Project name can only contain letters, numbers, hyphens, and underscores.';
-      }
-
-      const targetPath = path.join(process.cwd(), value);
-
-      if (await pathExists(targetPath)) {
-        return `A folder named "${value}" already exists in this location. Please choose a different name.`;
-      }
-
-      return true;
-    },
+    validate: validateProjectNamePrompt,
   });
 
   const useTypeScript = await confirm({

@@ -1,6 +1,6 @@
 # ts-cli-tool
 
-An intent-based TypeScript project scaffolder for generating production-shaped Next.js starter projects.
+An intent-based TypeScript project scaffolder for generating production-shaped Next.js starter projects. Generated projects feature premium, light-themed starter layouts (v1.3.0 - Premium Blueprint Starters) with customized styles, responsive cards, interactive state indicators, built-in `lucide-react` icons, and central documentation links.
 
 Instead of only asking low-level setup questions, `ts-cli-tool` asks what kind of project you want to build, creates an official Next.js base project, and then applies a tailored blueprint structure.
 
@@ -52,39 +52,29 @@ For example, instead of only creating a blank Next.js app, the CLI can generate:
 
 ## Installation
 
-Clone the repository:
+### Global install (recommended)
+
+```bash
+npm install -g @supunkalharajayasinghe/project-cli
+project-cli create
+```
+
+### Run without installing
+
+```bash
+npx @supunkalharajayasinghe/project-cli create
+```
+
+### From source (for contributors)
 
 ```bash
 git clone https://github.com/SupunKalharaJayasinghe/ts-cli-tool.git
 cd ts-cli-tool
-```
-
-Install dependencies:
-
-```bash
 npm install
-```
-
-Build the CLI:
-
-```bash
 npm run build
-```
-
-Run locally:
-
-```bash
-node dist/index.js create
-```
-
-Or link it globally for local development:
-
-```bash
 npm link
 project-cli create
 ```
-
-`my-cli` is also available as a backward-compatible alias.
 
 ## Commands
 
