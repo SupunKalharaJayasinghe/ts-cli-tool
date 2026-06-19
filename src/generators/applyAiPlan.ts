@@ -25,7 +25,7 @@ import type { ReactNode } from 'react';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: '${toTitle(plan.projectName)}',
+  title: ${JSON.stringify(toTitle(plan.projectName))},
   description: 'Generated AI application starter.',
 };
 
@@ -179,10 +179,37 @@ async function writeChatRoute(plan: CreatePlan): Promise<void> {
   await writeFileSafe(
     path.join(plan.targetPath, 'src/app/api/chat/route.ts'),
     `import { getSystemPrompt } from '@/lib/ai';
+import { z } from 'zod';
+
+const ChatRequestSchema = z.object({
+  messages: z
+    .array(
+      z.object({
+        role: z.enum(['user', 'assistant', 'system']),
+        content: z.string().min(1).max(8000),
+      })
+    )
+    .min(1)
+    .max(50),
+});
 
 export async function POST(req: Request) {
-  const body = await req.json();
-  const messages = Array.isArray(body.messages) ? body.messages : [];
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return Response.json({ error: 'Invalid JSON body.' }, { status: 400 });
+  }
+
+  const parsed = ChatRequestSchema.safeParse(body);
+  if (!parsed.success) {
+    return Response.json(
+      { error: 'Request did not match the expected shape.', details: parsed.error.flatten() },
+      { status: 400 }
+    );
+  }
+
+  const { messages } = parsed.data;
 
   return Response.json({
     id: crypto.randomUUID(),

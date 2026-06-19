@@ -2,10 +2,8 @@ import type { CreatePlan } from '../types.js';
 import { runCommand } from '../utils/runCommand.js';
 
 export async function createNextBase(plan: CreatePlan): Promise<void> {
-  const npxCommand = process.platform === 'win32' ? 'npx.cmd' : 'npx';
-
   await runCommand(
-    npxCommand,
+    'npx',
     [
       'create-next-app@latest',
       plan.projectName,

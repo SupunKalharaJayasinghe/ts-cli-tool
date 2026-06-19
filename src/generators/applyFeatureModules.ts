@@ -1,11 +1,13 @@
 import path from 'node:path';
+import fs from 'node:fs/promises';
 import type { CreatePlan } from '../types.js';
-import { readJsonFile, writeFileSafe, writeJsonFile } from '../utils/files.js';
+import { readJsonFile, writeFileSafe, writeJsonFile, assertPathSafe } from '../utils/files.js';
 
 interface GeneratedPackageJson {
   scripts?: Record<string, string>;
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
+  overrides?: Record<string, string>;
 }
 
 export async function applyFeatureModules(plan: CreatePlan): Promise<void> {
@@ -30,6 +32,9 @@ export async function applyFeatureModules(plan: CreatePlan): Promise<void> {
   if (plan.modules.includes('github-actions')) {
     await writeGithubActionsWorkflow(plan);
   }
+
+  // Ensure environment files are always ignored by git
+  await appendToGitignore(plan.targetPath);
 }
 
 async function updateGeneratedPackageJson(plan: CreatePlan): Promise<void> {
@@ -50,8 +55,16 @@ async function updateGeneratedPackageJson(plan: CreatePlan): Promise<void> {
 
   scripts.typecheck = 'tsc --noEmit';
 
-  // Add lucide-react for premium icons across all starter projects
+  // Add lucide-react and zod for premium icons and schema validation across all starter projects
   dependencies['lucide-react'] = '^0.400.0';
+  dependencies['zod'] = '^3.23.8';
+
+  const overrides = {
+    ...(packageJson.overrides ?? {}),
+  };
+
+  // Pin postcss to resolve GHSA-qx2v-qp2m-jg93 XSS advisory in Next.js subdependencies
+  overrides.postcss = '^8.5.10';
 
   if (plan.modules.includes('prisma')) {
     dependencies['@prisma/client'] = '^6.0.0';
@@ -69,6 +82,7 @@ async function updateGeneratedPackageJson(plan: CreatePlan): Promise<void> {
   packageJson.scripts = scripts;
   packageJson.dependencies = dependencies;
   packageJson.devDependencies = devDependencies;
+  packageJson.overrides = overrides;
 
   await writeJsonFile(packageJsonPath, packageJson);
 }
@@ -270,3 +284,31 @@ jobs:
 `
   );
 }
+
+const REQUIRED_ENV_IGNORES = [
+  '.env',
+  '.env.local',
+  '.env.development.local',
+  '.env.test.local',
+  '.env.production.local',
+];
+
+export async function appendToGitignore(projectRoot: string): Promise<void> {
+  const gitignorePath = path.join(projectRoot, '.gitignore');
+  assertPathSafe(gitignorePath);
+  let existing = '';
+  try {
+    existing = await fs.readFile(gitignorePath, 'utf-8');
+  } catch {
+    existing = ''; // no .gitignore yet — fine, create one
+  }
+
+  const existingLines = new Set(existing.split('\n').map((l) => l.trim()));
+  const missing = REQUIRED_ENV_IGNORES.filter((entry) => !existingLines.has(entry));
+  if (missing.length === 0) return;
+
+  const needsLeadingNewline = existing.length > 0 && !existing.endsWith('\n');
+  const addition = `${needsLeadingNewline ? '\n' : ''}\n# Environment variables\n${missing.join('\n')}\n`;
+  await fs.writeFile(gitignorePath, existing + addition, 'utf-8');
+}
+

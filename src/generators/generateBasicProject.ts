@@ -1,4 +1,3 @@
-import fs from 'node:fs/promises';
 import path from 'node:path';
 import type {
   BasicScaffoldOptions,
@@ -6,6 +5,7 @@ import type {
   PackageJson,
 } from '../types.js';
 import { writeJson } from '../utils/writeJson.js';
+import { writeFileSafe, ensureDir } from '../utils/files.js';
 
 export async function generateBasicProject(
   options: BasicScaffoldOptions
@@ -19,7 +19,7 @@ export async function generateBasicProject(
     includeDocker,
   } = options;
 
-  await fs.mkdir(targetPath, { recursive: true });
+  await ensureDir(targetPath);
 
   const packageJson: PackageJson = {
     name: projectName,
@@ -72,7 +72,7 @@ export async function generateBasicProject(
       jestConfig = `module.exports = { preset: 'ts-jest', testEnvironment: 'node' };\n`;
     }
 
-    await fs.writeFile(path.join(targetPath, 'jest.config.js'), jestConfig);
+    await writeFileSafe(path.join(targetPath, 'jest.config.js'), jestConfig);
   }
 
   await writeJson(path.join(targetPath, 'package.json'), packageJson);
@@ -86,16 +86,16 @@ COPY . .
 CMD ["npm", "start"]
 `;
 
-    await fs.writeFile(path.join(targetPath, 'Dockerfile'), dockerfileContent);
+    await writeFileSafe(path.join(targetPath, 'Dockerfile'), dockerfileContent);
   }
 
-  await fs.mkdir(path.join(targetPath, 'src'), { recursive: true });
+  await ensureDir(path.join(targetPath, 'src'));
 
   const fileExt = useTypeScript ? 'ts' : 'js';
 
   const fileContent = `console.log('🚀 Successfully running ${projectName}!');\n`;
 
-  await fs.writeFile(
+  await writeFileSafe(
     path.join(targetPath, `src/index.${fileExt}`),
     fileContent
   );

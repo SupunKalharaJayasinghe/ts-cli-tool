@@ -29,7 +29,7 @@ import type { ReactNode } from 'react';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: '${toTitle(plan.projectName)}',
+  title: ${JSON.stringify(toTitle(plan.projectName))},
   description: 'Generated full-stack product starter.',
 };
 
@@ -414,7 +414,7 @@ async function writeServerFiles(plan: CreatePlan): Promise<void> {
 
 export function getProductSummary(): ProductSummary {
   return {
-    name: '${plan.projectName}',
+    name: ${JSON.stringify(plan.projectName)},
     blueprint: 'fullstack-product',
   };
 }

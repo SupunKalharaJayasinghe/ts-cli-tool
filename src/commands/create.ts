@@ -32,9 +32,7 @@ export function registerCreateCommand(program: Command): void {
         if (plan.installDependencies) {
           console.log('\n📥 Installing dependencies...\n');
 
-          const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-
-          await runCommand(npmCommand, ['install'], plan.targetPath);
+          await runCommand('npm', ['install'], plan.targetPath);
         }
 
         console.log('\n✅ Project successfully created!\n');

@@ -52,39 +52,29 @@ For example, instead of only creating a blank Next.js app, the CLI can generate:
 
 ## Installation
 
-Clone the repository:
+### Global install (recommended)
+
+```bash
+npm install -g @supunkalharajayasinghe/project-cli
+project-cli create
+```
+
+### Run without installing
+
+```bash
+npx @supunkalharajayasinghe/project-cli create
+```
+
+### From source (for contributors)
 
 ```bash
 git clone https://github.com/SupunKalharaJayasinghe/ts-cli-tool.git
 cd ts-cli-tool
-```
-
-Install dependencies:
-
-```bash
 npm install
-```
-
-Build the CLI:
-
-```bash
 npm run build
-```
-
-Run locally:
-
-```bash
-node dist/index.js create
-```
-
-Or link it globally for local development:
-
-```bash
 npm link
 project-cli create
 ```
-
-`my-cli` is also available as a backward-compatible alias.
 
 ## Commands
 
