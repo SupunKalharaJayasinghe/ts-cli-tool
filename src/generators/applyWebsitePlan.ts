@@ -307,7 +307,7 @@ async function writeSectionComponent(
       <div className="mx-auto max-w-3xl">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3.5 py-1.5 text-xs font-semibold text-blue-700 ring-1 ring-inset ring-blue-700/10">
           <Sparkles className="h-3.5 w-3.5 animate-pulse" />
-          v1.3.0 • Premium Blueprint Starters
+          ${starterBranding.version} • ${starterBranding.releaseName}
         </span>
         <h1 className="mt-8 text-4xl font-extrabold tracking-tight text-slate-900 sm:text-6xl bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-500 bg-clip-text text-transparent">
           Build Your Next Big Idea Faster

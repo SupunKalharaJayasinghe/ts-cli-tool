@@ -1,6 +1,6 @@
 # ts-cli-tool
 
-An intent-based TypeScript project scaffolder for generating production-shaped Next.js starter projects. Generated projects feature premium, light-themed starter layouts (v1.3.0 - Premium Blueprint Starters) with customized styles, responsive cards, interactive state indicators, built-in `lucide-react` icons, and central documentation links.
+An intent-based TypeScript project scaffolder for generating production-shaped Next.js starter projects. Generated projects feature premium, light-themed starter layouts ("Premium Blueprint Starters") with customized styles, responsive cards, interactive state indicators, built-in `lucide-react` icons, and central documentation links.
 
 Instead of only asking low-level setup questions, `ts-cli-tool` asks what kind of project you want to build, creates an official Next.js base project, and then applies a tailored blueprint structure.
 

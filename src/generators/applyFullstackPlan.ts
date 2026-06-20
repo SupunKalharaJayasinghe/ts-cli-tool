@@ -78,7 +78,7 @@ export default function HomePage() {
         <div>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3.5 py-1.5 text-xs font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-700/10">
             <Sparkles className="h-3.5 w-3.5 animate-pulse" />
-            v1.3.0 • Premium Blueprint Starters
+            ${starterBranding.version} • ${starterBranding.releaseName}
           </span>
           <h1 className="mt-8 text-4xl font-extrabold tracking-tight text-slate-900 sm:text-6xl bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-500 bg-clip-text text-transparent">
             ${toTitle(plan.projectName)}

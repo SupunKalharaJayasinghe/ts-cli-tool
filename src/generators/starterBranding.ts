@@ -1,9 +1,13 @@
 import path from 'node:path';
+import { createRequire } from 'node:module';
 import { writeFileSafe } from '../utils/files.js';
+
+const require = createRequire(import.meta.url);
+const pkg = require('../../package.json') as { version: string };
 
 export const starterBranding = {
   cliName: 'project-cli',
-  version: 'v1.3.0',
+  version: `v${pkg.version}`,
   releaseName: 'Premium Blueprint Starters',
   githubUrl: 'https://github.com/SupunKalharaJayasinghe/ts-cli-tool',
   mediumUrl: 'https://medium.com/',
